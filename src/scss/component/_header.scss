@@ -1,0 +1,25 @@
+@import "../helper/variables.scss";
+@import "../helper/mixin.scss";
+.header{
+    height: $headerHeight;
+    padding: $paddingBox;
+    @include makeShadowBox();
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .header_row_left{
+        display: flex;
+        align-items: center;
+        .header_row_left_logo{
+            margin-right:20px;
+            font-size: 30px;
+            @include makeGradientColorText();
+            font-weight: 500;
+        }
+        .header_row_left_menu{
+            Button{
+                margin: 5px;
+            }
+        }
+    }
+}

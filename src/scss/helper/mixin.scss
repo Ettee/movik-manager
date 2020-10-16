@@ -1,1 +1,22 @@
 @import "./variables.scss";
+@mixin makeShadowBox(){
+    -webkit-box-shadow: 0px 0px 22px -1px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0px 0px 22px -1px rgba(0,0,0,0.75);
+    box-shadow: 0px 0px 22px -1px rgba(0,0,0,0.75);
+}
+@mixin makeGradientColorText(){
+    background: linear-gradient(90deg,$red , $purple ) ;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+@mixin makeGradientBackground() {
+    background: linear-gradient(90deg,$red , $purple ) !important;
+    border: none !important;
+    outline: none !important;
+}
+@mixin makeInput(){
+    border-left: none;
+    border-top: none;
+    border-right: none;
+    border-bottom: 2px solid $grayOpacity;
+}

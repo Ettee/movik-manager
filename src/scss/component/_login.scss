@@ -1,0 +1,111 @@
+@import "../helper/variables.scss";
+@import "../helper/mixin.scss";
+.login_page{
+    height: 100vh;
+    width: 100vw;
+    .login_animation-bg{
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        .login_content{
+            width: 50vw;
+            height: 100%;
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            .login_header{
+                display: inline-block;
+                font-size: 40px;
+                @include makeGradientColorText();
+            }
+            .login_box{
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                .login_box_content{
+                    background-repeat: no-repeat;
+                    background-image: url(../../assets/img/wave.svg);
+                    background-size: cover;
+                    width: 50%;
+                    height: 60%;
+                    border-radius: $borderRadius;
+                    padding: 20px;
+                    @include makeShadowBox();
+                    display: flex;
+                    flex-direction: column;
+                    .login_box_title{
+                        flex-grow: .5;
+                        font-size: 40px;
+                        line-height: 55px;
+                        color: white;
+                    }
+                    .login_box_input{
+                        flex-grow: 2;
+                        .input_box{
+                            margin: 28px 0;
+        
+                            >span{
+                                display: inline;
+                                input{
+                                    width: 80%;
+                                    @include makeInput();
+                                    background: transparent;
+                                    color: white;
+                                }
+                                input:focus{
+                                    box-shadow: none;
+                                }
+                                label{
+                                    color: white;
+                                }
+                            }
+                            .password_visibility{
+                                height: 100%;
+                                margin-left: 10px;
+                                i{
+                                    font-size: 18px;
+                                    cursor: pointer;
+                                    color: $grayOpacity;
+                                }
+                            }
+                            .input_validator_mess{
+                                color: white;
+                                display: block;
+                                
+                            }
+                        }
+                        button{
+                            margin-top: 1.2rem;
+                            width: 100%;
+                        }
+                    }
+                    .login_contact{
+                        text-align: center;
+                        color:$grayDark;
+                        >div{
+                            margin: 10px 0 ;  
+                        }
+                        i{
+                            cursor: pointer;
+                            margin: 0 10px;
+                        }
+                    }
+                }
+            }
+        }  
+    }
+}
+.gradient-button{
+    @include makeGradientBackground();
+}
+.gradient-button:focus{
+   box-shadow: none !important;
+}
+.hidden{
+    display: none;
+}

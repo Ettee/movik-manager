@@ -16,7 +16,8 @@ class Login extends Component {
           password:'',
           passwordVisibility:false,
           userNameValid:true,
-          passwordValid:true
+          passwordValid:true,
+          spinnerState:false
           
       }
     }
@@ -46,14 +47,22 @@ class Login extends Component {
     waitForLoginStatus=()=>{
       let loginInterVal=setInterval(()=>{
         if(this.props.loginStatus==="login_success"){
-          localStoreServices.saveDataToLocalStore("adminData",this.props.loginData)
-          this.toast.show({severity: 'success', summary: 'Đăng nhập thành công', detail: 'Đang chuyển đến Movik Manager', life: 3000});
-          clearInterval(loginInterVal)
-          setTimeout(()=>{
-            this.redirect()
-          },3000)
-        }else{
+          if(this.props.loginData.maLoaiNguoiDung==="QuanTri"){
+            localStoreServices.saveAdminLoginData(this.props.loginData)
+            this.toast.show({severity: 'success', summary: 'Đăng nhập thành công', detail: 'Đang chuyển đến Movik Manager', life: 3000});
+            this.setState({
+              spinnerState:true
+            })
+            clearInterval(loginInterVal)
+            setTimeout(()=>{
+              this.redirect()
+            },3000)
+          }else{
+            this.props.changeLoginStatus(false)
+            this.toast.show({severity: 'error', summary: 'Đăng nhập thất bại', detail: 'Có phải admin đéo đâu mà vào ?', life: 3000});
+          }
           
+        }else{
           if(this.props.loginStatus==="login_fail"){
             let message=this.props.loginMessage;
             this.toast.show({severity: 'error', summary: 'Đăng nhập thất bại', detail: message, life: 3000});
@@ -110,7 +119,7 @@ class Login extends Component {
             <div className="login_animation-bg">
               <Lottie options={defaultOptions} speed={1} />
               <div className="login_content">
-                <div className="login_header">Movik Manager</div>
+                <div className="login_header">Movik Manager <br/><span className="p-text-light " style={{fontSize:"25px"}}>Let's manage Movik</span></div>
                 <div className="login_box">
                   <div className="login_box_content">
                     <div className="login_box_title">
@@ -125,13 +134,13 @@ class Login extends Component {
                             name="userName"
                             value={this.state.userName}
                             onChange={this.handleOnChange}
-                            autocomplete="off"
+                            autoComplete="off"
                             onBlur={this.inputValidator}
                             aria-describedby="username-help" 
                           />
                           <label htmlFor="userName">Tài khoản</label> 
                         </span>
-                        <small id="username-help" className={!this.state.userNameValid?"input_validator_mess":"hidden"} >*Chưa nhập tài khoản.</small>
+                        <small id="username-help" className={!this.state.userNameValid?"input_validator_mess":"hidden"} >*Bạn chưa nhập tài khoản.</small>
                       </div>
                       <div className="input_box">
                         <span className="p-float-label">
@@ -161,16 +170,20 @@ class Login extends Component {
                             onClick={this.handlePasswordVisibility}
                           />
                         </span>
-                        <small id="password-help" className={!this.state.passwordValid?"input_validator_mess":"hidden"} >*Chưa nhập password.</small>
+                        <small id="password-help" className={!this.state.passwordValid?"input_validator_mess":"hidden"} >*Bạn chưa nhập password.</small>
+                      </div>
+                      <div className={this.state.spinnerState?"login_spinner":"login_spinner hide_spinner"}>
+                        <i className="pi pi-spin pi-spinner" style={{'fontSize': '2em'}}></i>
                       </div>
                       <Button
-                        label="Đăng nhập"
+                        label={this.state.spinnerState?"Đang chuyển hướng...":"Đăng nhập"}
+                        disabled={this.state.spinnerState}
                         className="p-button-rounded gradient-button"
                         onClick={this.handleDangNhap}
                       />
                     </div>
                     <div className="login_contact">
-                      <div>Need help ? Contact me </div>
+                      <div>Need helps ? Contact me </div>
                       <i
                         className="pi pi-facebook"
                         style={{ fontSize: "1.3em" }}
@@ -204,7 +217,11 @@ const mapDispatchToProps=(dispatch)=>{
   return{
     dangNhap:(user)=>{
       dispatch(action.actDangNhap(user))
+    },
+    changeLoginStatus:(boolean)=>{
+      dispatch(action.actChangeLoginStatus(boolean))
     }
+
   }
 }
 export default withRouter(connect(mapStateToProps,mapDispatchToProps)(Login))

@@ -30,3 +30,17 @@ export const actDangNhap =(user)=>{
         })
     }
 }
+export const actChangeLoginStatus=(value)=>{
+    return dispatch=>{
+        let data='';
+        if(value){
+            data='login_success'
+        }else{
+            data='login_fail'
+        }
+        dispatch({
+            type:ActionType.DANG_NHAP,
+            data:data
+        })
+    }
+}

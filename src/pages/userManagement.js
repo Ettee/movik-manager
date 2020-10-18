@@ -9,10 +9,11 @@ import { Column } from "primereact/column";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Dropdown } from "primereact/dropdown";
-import classNames from 'classnames';
-import { Calendar } from "primereact/calendar";
-import { MultiSelect } from "primereact/multiselect";
+import { Dialog } from 'primereact/dialog';
+import { Toast } from 'primereact/toast';
+import 'primeflex/primeflex.css';
 import { ProgressBar } from "primereact/progressbar";
+//NOTED: GIAO DIỆN CHỈ HỖ TRỢ THẤP NHẤT LÀ 800PX
 class UserManagement extends Component {
     constructor(props){
         super(props)
@@ -20,11 +21,20 @@ class UserManagement extends Component {
             this.props.history.push('/login')
         }
         this.state={
-            globalFilter: null,
-            loaiNguoiDungSelected:null
+          globalFilter: null,
+          loaiNguoiDungSelected:null,
+          userSelected:{
+            taiKhoan:'',
+            hoTen:'',
+            matKhau:'',
+            email:'',
+            maLoaiNguoiDung:'',
+            soDt:'',
+            maNhom:'GP09'
+          },
+          userDialog:false,
+          isDisableForm:false
         }
-      //cần dòng này để this.dt (ref đến dataTable) hoạt động
-      this.onLoaiNguoiDungFilterChange = this.onLoaiNguoiDungFilterChange.bind(this);
     }
     
     loaiNguoiDung=[
@@ -37,7 +47,7 @@ class UserManagement extends Component {
     renderHeader=()=>{
         return (
             <div className="table-header">
-              Danh sách người dùng
+              <h1>Danh sách người dùng</h1>
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText
@@ -110,47 +120,147 @@ class UserManagement extends Component {
             />
         );
     }
-
     loaiNguoiDungItemTemplate(option) {
       return (
         <span className={"custom-badge-"+option}>
           {option}
         </span>
       );
-  }
-    actionBodyTemplate() {
-        return (
-          <Button
-            type="button"
-            icon="pi pi-cog"
-            className="p-button-secondary"
-          ></Button>
-        );
     }
-    
-    onLoaiNguoiDungFilterChange(event) {
+    handleOnRowClick=(rowData)=>{
+      this.setState({
+        userSelected:{
+          taiKhoan:rowData.taiKhoan,
+          hoTen:rowData.hoTen,
+          matKhau:rowData.matKhau,
+          email:rowData.email,
+          maLoaiNguoiDung:rowData.maLoaiNguoiDung,
+          soDt:rowData.soDt
+        },
+        userDialog:true
+      })
+    }
+    actionBodyTemplate=(rowData)=>{
+      return (
+        <div>
+            <Button
+              type="button"
+              icon="pi pi-user-edit"
+              className="action-button edit"
+              onClick={()=>{this.handleOnRowClick(rowData)}}
+            ></Button>
+            <Button
+              type="button"
+              icon="pi pi-user-minus"
+              className="action-button delete"
+              onClick={()=>{this.deleteUser(rowData)}}
+            ></Button>
+        </div>  
+      );
+    }
+    onLoaiNguoiDungFilterChange=(event)=>{
         if(typeof this.dt !== "undefined"){
             this.dt.filter(event.value, "maLoaiNguoiDung", "equals")
             this.setState({ loaiNguoiDungSelected: event.value });
-        }else{
-            console.log(event.value,this.dt)
         }
     }
-    
+    hideDialog=()=>{
+      this.props.closeUpdateUser()
+      this.setState({
+        userDialog: false
+      });
+    }
+    updateUser=()=>{
+      let {userSelected}=this.state
+      let adminData= LocalStoreServs.getAdminLoginData()
+      let obj={
+        taiKhoan:userSelected.taiKhoan,
+        hoTen:userSelected.hoTen,
+        matKhau:userSelected.matKhau,
+        email:userSelected.email,
+        maLoaiNguoiDung:userSelected.maLoaiNguoiDung,
+        soDt:userSelected.soDt,
+        maNhom:'GP09'
+      }
+      this.setState({
+        isDisableForm:true
+      })
+      // console.log(obj)
+      this.waitForUpdateStatus()
+      this.props.updateUser(obj,adminData.accessToken)
+
+    }
+    deleteUser=(rowData)=>{
+      let adminData=LocalStoreServs.getAdminLoginData()
+      // console.log(rowData.taiKhoan,adminData.accessToken)
+      this.props.deleteUser(rowData.taiKhoan,adminData.accessToken)
+      this.waitForDeleteStatus()
+    }
+    waitForDeleteStatus=()=>{
+      let IntervalID=setInterval(()=>{
+        if(this.props.deleteUserStatus==="deleteUser_success"){
+          this.props.getListAllUser()
+          this.toast.show({severity: 'success', summary: 'Xóa tài khoản thành công'});
+          clearInterval(IntervalID)
+        }else{
+          if(this.props.deleteUserStatus==="deleteUser_fail"){
+            let message= this.props.deleteUserMessage
+            this.toast.show({severity: 'error', summary: 'Xóa tài khoản thất bại',detail:message});
+            clearInterval(IntervalID)
+          }
+        }
+      },500)
+    }
+    waitForUpdateStatus=()=>{
+      let IntervalID=setInterval(()=>{
+        if(this.props.updateUserStatus==="updateUser_success"){
+          this.props.getListAllUser()
+          this.toast.show({severity: 'success', summary: 'Cập nhật tài khoản thành công'});
+          this.setState({
+            isDisableForm:false
+          })
+          this.hideDialog()
+          clearInterval(IntervalID)
+        }else{
+          if(this.props.updateUserStatus==="updateUser_fail"){
+            this.toast.show({severity: 'error', summary: 'Cập nhật tài khoản thất bại'});
+            this.setState({
+              isDisableForm:false
+            })
+            clearInterval(IntervalID)
+          }
+        }
+      },500)
+    }
+    handleOnChangeUpdateInput=(e)=>{
+      let{name,value}=e.target
+      this.setState({
+        userSelected:{...this.state.userSelected,[name]:value}
+      })
+    }
     render() {
         let {listAllUser}=this.props;
-        console.log(listAllUser);
         const header=this.renderHeader();
         const loaiNguoiDungFilter=this.renderLoaiNguoDungFilter();
+        const userDialogFooter = (
+          <Fragment>
+              <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={this.hideDialog} />
+              <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={this.updateUser} />
+          </Fragment>
+      );
+      // console.log(this.props.deleteUserMessage)
         return (
           <div className="user_manager_page">
+            <Toast ref={(el) => this.toast = el} />
             <DataTable
-              ref={(el) => (this.dt=el)}
+              ref={(el) => (this.dt = el)}
               value={listAllUser}
               header={header}
               className="p-datatable-users"
               dataKey="id"
               rowHover
+              // selection={this.state.userSelected}
+              // onSelectionChange={e => this.setState({userSelected: e.value})}
               globalFilter={this.state.globalFilter}
               paginator
               rows={10}
@@ -217,24 +327,126 @@ class UserManagement extends Component {
                 filterElement={loaiNguoiDungFilter}
               />
               <Column
+                header="Tác vụ"
                 body={this.actionBodyTemplate}
                 headerStyle={{ width: "8em", textAlign: "center" }}
                 bodyStyle={{ textAlign: "center", overflow: "visible" }}
               />
             </DataTable>
+
+            <Dialog
+              visible={this.state.userDialog}
+              style={{ width: "500px" }}
+              header="Thông tin tài khoản"
+              modal
+              className="p-fluid"
+              footer={userDialogFooter}
+              onHide={this.hideDialog}
+            >
+              <div className="user_update_dialog_input p-fluid">
+                <div className="p-field">
+                  <span className="p-float-label">
+                    <InputText
+                      id="taiKhoan"
+                      name="taiKhoan"
+                      value={this.state.userSelected.taiKhoan}
+                      disabled
+                      
+                    />
+                    <label htmlFor="taiKhoan">Tài khoản</label>
+                  </span>
+                </div>
+                <div className="p-field">
+                  <span className="p-float-label">
+                    <InputText
+                      id="hoTen"
+                      name="hoTen"
+                      autoComplete="off"
+                      disabled={this.state.isDisableForm}
+                      value={this.state.userSelected.hoTen}
+                      onChange={(e) => {this.handleOnChangeUpdateInput(e)}}
+                    />
+                    <label htmlFor="hoTen">Họ tên</label>
+                  </span>
+                </div>
+                <div className="p-field">
+                  <span className="p-float-label">
+                    <InputText
+                      id="matKhau"
+                      name="matKhau"
+                      autoComplete="off"
+                      disabled={this.state.isDisableForm}
+                      value={this.state.userSelected.matKhau}
+                      onChange={(e) => {this.handleOnChangeUpdateInput(e)}}
+                    />
+                    <label htmlFor="matKhau">Mật khẩu</label>
+                  </span>
+                </div>
+                <div className="p-field">
+                  <span className="p-float-label">
+                    <InputText
+                      id="email"
+                      name="email"
+                      autoComplete="off"
+                      disabled={this.state.isDisableForm}
+                      value={this.state.userSelected.email}
+                      onChange={(e) => {this.handleOnChangeUpdateInput(e)}}
+                    />
+                    <label htmlFor="email">Email</label>
+                  </span>
+                </div>
+                <div className="p-field">
+                  <span className="p-float-label">
+                    <InputText
+                      id="soDt"
+                      name="soDt"
+                      autoComplete="off"
+                      disabled={this.state.isDisableForm}
+                      value={this.state.userSelected.soDt}
+                      onChange={(e) => {this.handleOnChangeUpdateInput(e)}}
+                    />
+                    <label htmlFor="soDt">Số điện thoại</label>
+                  </span>
+                </div>
+                <div className="p-field">
+                  <span className="p-float-label">
+                    <InputText
+                      id="maLoaiNguoiDung"
+                      name="maLoaiNguoiDung"
+                      autoComplete="off"
+                      value={this.state.userSelected.maLoaiNguoiDung}
+                      disabled
+                    />
+                    <label htmlFor="maLoaiNguoiDung">Loại người dùng</label>
+                  </span>
+                </div>
+              </div>
+            </Dialog>
           </div>
         );
     }
 }
 const mapStateToProps=(state)=>{
     return {
-        listAllUser:state.adminReducer.listAllUser
+        listAllUser:state.adminReducer.listAllUser,
+        updateUserStatus:state.adminReducer.updateUserStatus,
+        deleteUserStatus:state.adminReducer.deleteUserStatus,
+        deleteUserMessage:state.adminReducer.deleteUserMessage,
     }
 }
 const mapDispatchToProps=(dispatch)=>{
     return {
         getListAllUser:()=>{
             dispatch(action.actGetListAllUser())
+        },
+        updateUser:(obj,token)=>{
+          dispatch(action.actUpdateUser(obj,token))
+        },
+        closeUpdateUser:()=>{
+          dispatch(action.actCloseUpdateUser())
+        },
+        deleteUser:(taiKhoan,token)=>{
+          dispatch(action.actDeleteUser(taiKhoan,token))
         }
     }
 }

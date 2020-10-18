@@ -61,3 +61,62 @@ export const actGetListAllUser=()=>{
         })
     }
 }
+export const actUpdateUser=(obj,token)=>{
+    return dispatch=>{
+        Axios({
+            method:"PUT",
+            url:"https://movie0706.cybersoft.edu.vn/api/QuanLyNguoiDung/CapNhatThongTinNguoiDung",
+            data:obj,
+            headers:{
+                Authorization:`Bearer ${token}`
+                
+            }
+        }).then(rs=>{
+            dispatch({
+                type:ActionType.UPDATE_USER,
+                data:'updateUser_success'
+            })
+        }).catch((err)=>{
+            console.log(err)
+            dispatch({
+                type:ActionType.UPDATE_USER,
+                data:'updateUser_fail'
+            })
+        })
+    }
+}
+export const actCloseUpdateUser=()=>{
+    return dispatch=>{
+        dispatch({
+            type:ActionType.UPDATE_USER,
+            data:''
+        })
+    }
+}
+export const actDeleteUser=(taiKhoan,token)=>{
+    return dispatch=>{
+        Axios({
+            method:"DELETE",
+            url:`https://movie0706.cybersoft.edu.vn/api/QuanLyNguoiDung/XoaNguoiDung?TaiKhoan=${taiKhoan}`,
+            headers:{
+                Authorization:`Bearer ${token}`
+            }
+        }).then((rs)=>{
+            dispatch({
+                type:ActionType.DELETE_USER,
+                data:"deleteUser_success"
+            })
+        })
+        .catch(err=>{
+            console.log(err)
+            dispatch({
+                type:ActionType.DELETE_USER,
+                data:"deleteUser_fail"
+            })
+            dispatch({
+                type:ActionType.DELETE_USER_MESSAGE,
+                data:err.response.data
+            })
+        })
+    }
+}

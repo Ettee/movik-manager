@@ -114,12 +114,3 @@
         }  
     }
 }
-.gradient-button{
-    @include makeGradientBackground();
-}
-.gradient-button:focus{
-   box-shadow: none !important;
-}
-.hidden{
-    display: none;
-}

@@ -1,0 +1,26 @@
+@import "../helper/variables.scss";
+@import "../helper/mixin.scss";
+.gradient-button{
+    @include makeGradientBackground();
+}
+.gradient-button:focus{
+   box-shadow: none !important;
+}
+.hidden{
+    display: none;
+}
+.action-button{
+    background-color: transparent;
+    border: none !important;
+    border-radius: 50% !important;
+    margin: 0 3px !important;
+    
+}
+.action-button.edit{
+    background-color: $yellow;
+    color: $black;
+}
+.action-button.delete{
+    background-color: $red;
+    color: white;
+}

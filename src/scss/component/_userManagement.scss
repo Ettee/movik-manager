@@ -24,7 +24,14 @@
             color: $greenBadgeText;
         }
     }
+    .user_update_dialog_input{
+        padding: 10px;
+        .p-field{
+            padding: 10px 0 !important;
+        }
+    }
 }
+
 @media (max-width: 960px) {
     .user_manager_page{
         .p-datatable-users{

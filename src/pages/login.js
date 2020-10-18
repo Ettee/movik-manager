@@ -59,7 +59,7 @@ class Login extends Component {
             },3000)
           }else{
             this.props.changeLoginStatus(false)
-            this.toast.show({severity: 'error', summary: 'Đăng nhập thất bại', detail: 'Có phải admin đéo đâu mà vào ?', life: 3000});
+            this.toast.show({severity: 'error', summary: 'Đăng nhập thất bại', detail: 'Tài khoản người dùng không thể truy cập', life: 3000});
           }
           
         }else{

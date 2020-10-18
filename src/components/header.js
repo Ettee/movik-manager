@@ -37,7 +37,6 @@ class Header extends Component {
     }
 
     render() {
-        console.log(this.state.dialogState)
         return (
           <div className="header">
             <ConfirmationDialog

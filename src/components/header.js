@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Button } from 'primereact/button';
 import * as localStoreServs from "../services/accessToLocalStore";
 import {withRouter} from "react-router-dom";
-import DialogCustom from "../components/shared/dialog";
+import ConfirmationDialog from "./shared/confirmationDialog";
 class Header extends Component {
     constructor(props){
         super(props)
@@ -18,23 +18,36 @@ class Header extends Component {
             dialogState:true
         })
     }
+    closeDialog=()=>{
+      this.setState({
+        dialogState:false
+      })
+    }
+
     logOut=()=>{
         localStoreServs.removeAdminDataFromLocalStore();
         this.props.history.push("/login");
+        this.setState({
+          dialogState:false
+        })
+    }
+    getAdminName=()=>{
+      let data = localStoreServs.getAdminLoginData()
+      return data.taiKhoan
     }
 
     render() {
         console.log(this.state.dialogState)
         return (
           <div className="header">
-            <DialogCustom
-              header="Xác nhận đăng xuất"
-              content="Bạn sẽ được chuyển về trang đăng nhập"
+            <ConfirmationDialog
+              isOpen={this.state.dialogState}
+              header="Đăng xuất"
               btLeft="Hủy"
               btRight="Xác nhận"
-              position="center"
-              openDialog={this.state.dialogState}
-              btRightAction={this.logOut}
+              content="Bạn muốn thoát Movik Manager ?"
+              rightAction={this.logOut}
+              closeDialog={this.closeDialog}
             />
             <div className="header_row_left">
               <div className="header_row_left_logo">Movik Manager</div>
@@ -81,7 +94,7 @@ class Header extends Component {
               </div>
             </div>
             <div className="header_row_right">
-              <div className="header_row_right_user">Xin chào,anhphong20</div>
+              <div className="header_row_right_user" style={{marginRight:"20px"}}>Xin chào, {this.getAdminName()}</div>
             </div>
           </div>
         );

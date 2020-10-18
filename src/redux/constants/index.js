@@ -1,3 +1,4 @@
 export const DANG_NHAP="DANG_NHAP";
 export const DANG_NHAP_DATA="DANG_NHAP_DATA";
 export const DANG_NHAP_MESSAGE="DANG_NHAP_MESSAGE";
+export const GET_LIST_ALL_USER="GET_LIST_ALL_USER"

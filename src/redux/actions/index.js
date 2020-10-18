@@ -44,3 +44,20 @@ export const actChangeLoginStatus=(value)=>{
         })
     }
 }
+export const actGetListAllUser=()=>{
+    return dispatch=>{
+        Axios({
+            method:"GET",
+            url:"https://movie0706.cybersoft.edu.vn/api/QuanLyNguoiDung/LayDanhSachNguoiDung?MaNhom=GP09"
+        })
+        .then(res=>{
+            dispatch({
+                type:ActionType.GET_LIST_ALL_USER,
+                data:res.data
+            })
+        })
+        .catch(err=>{
+            console.log(err)
+        })
+    }
+}

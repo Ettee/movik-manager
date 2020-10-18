@@ -2,7 +2,8 @@ import * as ActionType from "../constants"
 let initialState={
     loginStatus:'waiting',
     loginMessage:'',
-    loginData:{}
+    loginData:{},
+    listAllUser:[]
 }
 const adminReducer=(state=initialState,action)=>{
     switch(action.type){
@@ -14,6 +15,9 @@ const adminReducer=(state=initialState,action)=>{
             return {...state}
         case ActionType.DANG_NHAP_DATA:
             state.loginData=action.data
+            return {...state}
+        case ActionType.GET_LIST_ALL_USER:
+            state.listAllUser=action.data
             return {...state}
         default:
             return {...state}

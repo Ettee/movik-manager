@@ -1,0 +1,57 @@
+@import "../helper/variables.scss";
+@import "../helper/mixin.scss";
+.user_manager_page{
+    .p-datatable-users{
+        .p-datatable-header{
+            .table-header{
+                display: flex;
+                justify-content: space-between;
+            }
+        }
+        .p-custom-responsive{
+            display: none;
+        }
+        .custom-badge-QuanTri{
+            padding: 5px;
+            border-radius: 5px;
+            background-color: $redBadgeBg;
+            color: $redBadgeText;
+        }
+        .custom-badge-KhachHang{
+            padding: 3px 5px;
+            border-radius: 5px;
+            background-color: $greenBadgeBg;
+            color: $greenBadgeText;
+        }
+    }
+}
+@media (max-width: 960px) {
+    .user_manager_page{
+        .p-datatable-users{
+            .p-custom-responsive{
+                padding: .4rem;
+                min-width: 30%;
+                display: inline-block;
+                margin: -.4rem 1rem -.4rem -.4rem;
+                font-weight: bold;
+            }
+            .p-datatable-thead > tr > th,
+            .p-datatable-tfoot > tr > td
+            {
+                display: none !important;
+            }
+            .p-datatable-tbody > tr{
+                border-bottom: 1px solid black;
+            }
+            .p-datatable-tbody > tr > td{
+                text-align: left;
+                display: block;
+                border: 0 none !important;
+                width: 100% !important;
+                float: left;
+                clear: left;
+                border: 0 none;
+            }
+        }
+    }
+}

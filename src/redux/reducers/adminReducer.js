@@ -6,7 +6,8 @@ let initialState={
     listAllUser:[],
     updateUserStatus:'',
     deleteUserStatus:'',
-    deleteUserMessage:''
+    deleteUserMessage:'',
+    addUserStatus:''
 }
 const adminReducer=(state=initialState,action)=>{
     switch(action.type){
@@ -30,6 +31,9 @@ const adminReducer=(state=initialState,action)=>{
             return {...state}
         case ActionType.DELETE_USER_MESSAGE:
             state.deleteUserMessage=action.data;
+            return {...state}
+        case ActionType.ADD_USER_STATUS:
+            state.addUserStatus=action.data;
             return {...state}
         default:
             return {...state}

@@ -120,3 +120,25 @@ export const actDeleteUser=(taiKhoan,token)=>{
         })
     }
 }
+export const actAddUser=(obj)=>{
+    return dispatch=>{
+        Axios({
+            method:"POST",
+            url:"https://movie0706.cybersoft.edu.vn/api/QuanLyNguoiDung/DangKy",
+            data:obj
+        })
+        .then(rs=>{
+            dispatch({
+                type:ActionType.ADD_USER_STATUS,
+                data:"addUSer_success"
+            })
+        })
+        .catch(err=>{
+            console.log(err.response.data)
+            dispatch({
+                type:ActionType.ADD_USER_STATUS,
+                data:"addUSer_fail"
+            })
+        })
+    }
+}

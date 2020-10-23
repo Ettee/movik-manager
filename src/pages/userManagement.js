@@ -48,15 +48,18 @@ class UserManagement extends Component {
           userDialog:false,
           isDisableForm:false,
           addNewDialog:false,
-          taiKhoanValidator:false,
-          hoTenValidator:false,
-          emailValidator:false,
-          maLoaiNguoiDungValidator:false,
-          soDtValidator:false,
-          matKhauValidator:false,
+          taiKhoanValidator:true,
+          hoTenValidator:true,
+          emailValidator:true,
+          maLoaiNguoiDungValidator:true,
+          soDtValidator:true,
+          matKhauValidator:true,
           isDeleteDialogOpen:false,
           rowData:null,
-          isHideProgressBar:true
+          isHideProgressBar:true,
+          emailValidatorMessage:'',
+          phoneNumberValidatorMessage:'',
+          matKhauValidatorMessage:''
         }
     }
     
@@ -67,6 +70,8 @@ class UserManagement extends Component {
     componentDidMount(){
         this.props.getListAllUser()
     }
+
+    //render template
     renderHeader=()=>{
         return (
             <div className="table-header">
@@ -122,6 +127,18 @@ class UserManagement extends Component {
             </Fragment>
         )
     }
+    rightToolbarTemplate=()=>{
+      return (
+        <Fragment>
+          <Button
+            label="New"
+            icon="pi pi-plus"
+            className="p-button-success p-mr-2"
+            onClick={this.openAddUserDialog}
+          />
+        </Fragment>
+      );
+    }
     loaiNguoiDungBodyTemplate=(rowData)=>{
         return(
             <Fragment>
@@ -150,19 +167,6 @@ class UserManagement extends Component {
         </span>
       );
     }
-    handleOnEditClick=(rowData)=>{
-      this.setState({
-        userSelected:{
-          taiKhoan:rowData.taiKhoan,
-          hoTen:rowData.hoTen,
-          matKhau:rowData.matKhau,
-          email:rowData.email,
-          maLoaiNguoiDung:rowData.maLoaiNguoiDung,
-          soDt:rowData.soDt
-        },
-        userDialog:true
-      })
-    }
     actionBodyTemplate=(rowData)=>{
       return (
         <div>
@@ -181,18 +185,8 @@ class UserManagement extends Component {
         </div>  
       );
     }
-    onLoaiNguoiDungFilterChange=(event)=>{
-        if(typeof this.dt !== "undefined"){
-            this.dt.filter(event.value, "maLoaiNguoiDung", "equals")
-            this.setState({ loaiNguoiDungSelected: event.value });
-        }
-    }
-    hideDialog=()=>{
-      this.props.closeUpdateUser()
-      this.setState({
-        userDialog: false
-      });
-    }
+
+    //tác vụ chính
     updateUser=()=>{
       let {userSelected}=this.state
       let adminData= LocalStoreServs.getAdminLoginData()
@@ -222,6 +216,181 @@ class UserManagement extends Component {
         this.waitForDeleteStatus()
       } 
     }
+    addUser=()=>{
+      this.inputValidator()
+      setTimeout(()=>{
+        let {taiKhoanValidator,matKhauValidator,emailValidator,hoTenValidator,soDtValidator,maLoaiNguoiDungValidator}=this.state
+        let validator=taiKhoanValidator && matKhauValidator && emailValidator && hoTenValidator && soDtValidator && maLoaiNguoiDungValidator
+        if(validator){
+          this.setState({
+            isDisableForm:true,
+            isHideProgressBar:false
+          })
+          // console.log(this.state.newUser)
+          this.waitForAddUserStatus()
+          this.props.addUser(this.state.newUser)
+        }else{
+          this.toast.show({severity: 'error', summary: 'Bạn hãy hoàn thành form đăng kí'});
+        }
+      },500)
+      
+    }
+
+    //handle event click, change
+    handleOnChangeUpdateInput=(e)=>{
+      let{name,value}=e.target
+      this.setState({
+        userSelected:{...this.state.userSelected,[name]:value}
+      })
+    }
+    handleOnEditClick=(rowData)=>{
+      this.setState({
+        userSelected:{
+          taiKhoan:rowData.taiKhoan,
+          hoTen:rowData.hoTen,
+          matKhau:rowData.matKhau,
+          email:rowData.email,
+          maLoaiNguoiDung:rowData.maLoaiNguoiDung,
+          soDt:rowData.soDt
+        },
+        userDialog:true
+      })
+    }
+    onLoaiNguoiDungFilterChange=(event)=>{
+      if(typeof this.dt !== "undefined"){
+          this.dt.filter(event.value, "maLoaiNguoiDung", "equals")
+          this.setState({ loaiNguoiDungSelected: event.value });
+      }
+    }
+    handleOnChangeAddNewUser=(e)=>{
+      let{name,value}=e.target
+      this.inputValidator()
+      this.setState({
+        newUser:{...this.state.newUser,[name]:value},
+      })
+    }
+    handleRadioButtonLoaiNguoiDung=(event)=>{
+      this.setState({
+        newUser:{...this.state.newUser,maLoaiNguoiDung:event.value},
+        maLoaiNguoiDungValidator:true
+      })
+      
+    }
+
+    //close dialog
+    closeAddUserDialog=()=>{
+      this.setState({
+        addNewDialog:false,
+        newUser:{
+          taiKhoan:'',
+          hoTen:'',
+          matKhau:'',
+          email:'',
+          maLoaiNguoiDung:'',
+          soDt:'',
+        },
+        taiKhoanValidator:true,
+        hoTenValidator:true,
+        emailValidator:true,
+        maLoaiNguoiDungValidator:true,
+        soDtValidator:true,
+        matKhauValidator:true,
+        isHideProgressBar:true,
+        isDisableForm:false
+      });
+    }
+    closeUpdateDialog=()=>{
+      this.props.closeUpdateUser()
+      this.setState({
+        userDialog: false,
+        isHideProgressBar:true
+      });
+    }
+    closeDeleteDialog=()=>{
+      this.setState({
+        isDeleteDialogOpen:false
+      })
+    }
+
+    //open dialog
+    openAddUserDialog=()=>{
+      this.setState({
+        addNewDialog:true
+      })
+    }
+    openDeleteDialog=(rowData)=>{
+      this.setState({
+        isDeleteDialogOpen:true,
+        rowData:rowData
+      })
+    }
+
+    //validation
+    inputValidator=()=>{
+      if(this.state.newUser.taiKhoan===""){
+        this.setState({taiKhoanValidator:false})
+      }else{
+        this.setState({taiKhoanValidator:true})
+      }
+      if(this.state.newUser.hoTen===""){
+        this.setState({hoTenValidator:false})
+      }else{
+        this.setState({hoTenValidator:true})
+      }
+      if(this.state.newUser.matKhau===""){
+        this.setState({
+          matKhauValidator:false,
+          matKhauValidatorMessage:"Chưa nhập mật khẩu"
+        })
+      }else{
+        if(this.state.newUser.matKhau.length<8){
+          this.setState({
+            matKhauValidator:false,
+            matKhauValidatorMessage:"Mật khẩu phải có ít nhất 8 kí tự"
+          })
+        }else{
+          this.setState({matKhauValidator:true})
+        }
+      }
+      if(this.state.newUser.email===""){
+        this.setState({
+          emailValidator:false,
+          emailValidatorMessage:"Chưa nhập email"
+        })
+      }else{
+        if(!this.state.newUser.email.match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)){
+          this.setState({
+            emailValidator:false,
+            emailValidatorMessage:"email không đúng định dạng"
+          })
+        }else{
+          this.setState({emailValidator:true})
+        }
+      }
+      if(this.state.newUser.soDt===""){
+        this.setState({
+          soDtValidator:false,
+          phoneNumberValidatorMessage:"Chưa nhập số điện thoại"
+        })
+      }else{
+        if(!this.state.newUser.soDt.match(/^0[0-9]{9}$/)){
+          this.setState({
+            soDtValidator:false,
+            phoneNumberValidatorMessage:"Số điện thoại không đúng"
+          })
+        }else{
+          this.setState({soDtValidator:true})
+        }
+      }
+      if(this.state.newUser.maLoaiNguoiDung===""){
+        this.setState({maLoaiNguoiDungValidator:false})
+      }else{
+        this.setState({maLoaiNguoiDungValidator:true})
+      }
+
+    }
+    
+    //waiting for status
     waitForDeleteStatus=()=>{
       let IntervalID=setInterval(()=>{
         if(this.props.deleteUserStatus==="deleteUser_success"){
@@ -246,11 +415,11 @@ class UserManagement extends Component {
             isDisableForm:false,
             isHideProgressBar:true
           })
-          this.hideDialog()
+          this.closeUpdateDialog()
           clearInterval(IntervalID)
         }else{
           if(this.props.updateUserStatus==="updateUser_fail"){
-            this.toast.show({severity: 'error', summary: 'Cập nhật tài khoản thất bại'});
+            this.toast.show({severity: 'error', summary: 'Cập nhật tài khoản thất bại',detail:"Hãy liên hệ với quản trị viên hệ thống"});
             this.setState({
               isDisableForm:false,
               isHideProgressBar:true
@@ -260,142 +429,34 @@ class UserManagement extends Component {
         }
       },500)
     }
-    handleOnChangeUpdateInput=(e)=>{
-      let{name,value}=e.target
-      this.setState({
-        userSelected:{...this.state.userSelected,[name]:value}
-      })
+    waitForAddUserStatus=()=>{
+      let intervalID=setInterval(() => {
+        if(this.props.addUserStatus==="addUSer_success"){
+          this.props.getListAllUser()
+          this.toast.show({severity: 'success', summary: 'Thêm tài khoản thành công'});
+          this.closeAddUserDialog()
+          clearInterval(intervalID)
+        }else{
+          if(this.props.addUserStatus==="addUSer_fail"){
+            this.toast.show({severity: 'error', summary: 'Thêm tài khoản thất bại',detail:"Hãy liên hệ với quản trị viên hệ thống"});
+            this.closeAddUserDialog()
+            clearInterval(intervalID)
+          }
+        }
+      }, 500);
     }
-    rightToolbarTemplate=()=>{
-      return (
-        <Fragment>
-          <Button
-            label="New"
-            icon="pi pi-plus"
-            className="p-button-success p-mr-2"
-            onClick={this.openAddUserDialog}
-          />
-          <Button
-            label="Delete"
-            icon="pi pi-trash"
-            className="p-button-danger"
-            // onClick={this.confirmDeleteSelected}
-          />
-        </Fragment>
-      );
-    }
-    hideAddUserDialog=()=>{
-      this.setState({
-        addNewDialog:false,
-        newUser:{
-          taiKhoan:'',
-          hoTen:'',
-          matKhau:'',
-          email:'',
-          maLoaiNguoiDung:'',
-          soDt:'',
-        },
-        taiKhoanValidator:false,
-        hoTenValidator:false,
-        emailValidator:false,
-        maLoaiNguoiDungValidator:false,
-        soDtValidator:false,
-        matKhauValidator:false
-      });
-    }
-    //*Validator : true sẽ hiện báo lỗi
-    openAddUserDialog=()=>{
-      this.setState({
-        addNewDialog:true
-      })
-    }
-    addUser=()=>{
-      if(true){
-        console.log(this.state.newUser)
-      }else{
-        this.setState({
-          taiKhoanValidator:true,
-          hoTenValidator:true,
-          emailValidator:true,
-          maLoaiNguoiDungValidator:true,
-          soDtValidator:true,
-          matKhauValidator:true
-        })
-      }
-      
-    }
-    handleOnChangeAddNewUser=(e)=>{
-      let{name,value}=e.target
-      this.inputValidator()
-      this.setState({
-        newUser:{...this.state.newUser,[name]:value},
-      })
-    }
-    handleRadioButtonLoaiNguoiDung=(event)=>{
-      this.setState({
-        newUser:{...this.state.newUser,maLoaiNguoiDung:event.value},
-        maLoaiNguoiDungValidator:false
-      })
-      
-    }
-    //chỉ check đc khi addUser
-    dropDownValidator=()=>{
-      if(this.state.newUser.maLoaiNguoiDung===""){
-        this.setState({maLoaiNguoiDungValidator:true})
-      }else{
-        this.setState({maLoaiNguoiDungValidator:false})
-      }
-    }
-    inputValidator=()=>{
-      if(this.state.newUser.taiKhoan===""){
-        this.setState({taiKhoanValidator:true})
-      }else{
-        this.setState({taiKhoanValidator:false})
-      }
-      if(this.state.newUser.hoTen===""){
-        this.setState({hoTenValidator:true})
-      }else{
-        this.setState({hoTenValidator:false})
-      }
-      if(this.state.newUser.matKhau===""){
-        this.setState({matKhauValidator:true})
-      }else{
-        this.setState({matKhauValidator:false})
-      }
-      if(this.state.newUser.email===""){
-        this.setState({emailValidator:true})
-      }else{
-        this.setState({emailValidator:false})
-      }
-      if(this.state.newUser.soDt===""){
-        this.setState({soDtValidator:true})
-      }else{
-        this.setState({soDtValidator:false})
-      }
 
-    }
-    openDeleteDialog=(rowData)=>{
-      this.setState({
-        isDeleteDialogOpen:true,
-        rowData:rowData
-      })
-    }
-    closeDeleteDialog=()=>{
-      this.setState({
-        isDeleteDialogOpen:false
-      })
-    }
     render() {
         let {listAllUser}=this.props;
         const header=this.renderHeader();
         const loaiNguoiDungFilter=this.renderLoaiNguoDungFilter();
-        const userDialogFooter = (
+        const editUserDialogFooter = (
           <Fragment>
             <Button
               label="Cancel"
               icon="pi pi-times"
               className="p-button-text"
-              onClick={this.hideDialog}
+              onClick={this.closeUpdateDialog}
             />
             <Button
               label="Save"
@@ -411,7 +472,7 @@ class UserManagement extends Component {
               label="Cancel"
               icon="pi pi-times"
               className="p-button-text"
-              onClick={this.hideAddUserDialog}
+              onClick={this.closeAddUserDialog}
             />
             <Button
               label="Save"
@@ -440,88 +501,91 @@ class UserManagement extends Component {
                 right={this.rightToolbarTemplate}
               ></Toolbar>
             </div>
-            <DataTable
-              ref={(el) => (this.dt = el)}
-              value={listAllUser}
-              header={header}
-              className="p-datatable-users"
-              dataKey="id"
-              rowHover
-              // selection={this.state.userSelected}
-              // onSelectionChange={e => this.setState({userSelected: e.value})}
-              globalFilter={this.state.globalFilter}
-              paginator
-              rows={10}
-              emptyMessage="Không tìm thấy người dùng"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-              rowsPerPageOptions={[10, 25, 50]}
-            >
-              <Column
-                field="taiKhoan"
-                header="Tài khoản"
-                body={this.taiKhoanBodyTemplate}
-                sortable
-                filter
-                filterMatchMode="contains"
-                filterPlaceholder="Tìm theo tài khoản"
-              />
-              <Column
-                // sortField="country.name"
-                // filterField="country.name"
-                field="hoTen"
-                header="Họ tên"
-                body={this.hoTenBodyTemplate}
-                sortable
-                filter
-                filterMatchMode="contains"
-                filterPlaceholder="Tìm theo tên"
-              />
-              <Column
-                // sortField="representative.name"
-                // filterField="representative.name"
-                field="email"
-                header="Email"
-                body={this.emailBodyTemplate}
-                sortable
-                filter
-                filterMatchMode="contains"
-                filterPlaceholder="Tìm theo email"
-              />
-              <Column
-                field="soDt"
-                header="Số điện thoại"
-                body={this.phoneNumberBodyTemplate}
-                sortable
-                filter
-                filterMatchMode="contains"
-                filterPlaceholder="Tìm theo số điện thoại"
-              />
-              <Column
-                field="matKhau"
-                header="Mật Khẩu"
-                body={this.passwordBodyTemplate}
-                sortable
-                filter
-                filterMatchMode="contains"
-                filterPlaceholder="Tìm theo mật khẩu"
-              />
-              <Column
-                field="maLoaiNguoiDung"
-                header="Loại người dùng"
-                body={this.loaiNguoiDungBodyTemplate}
-                sortable
-                filter
-                filterElement={loaiNguoiDungFilter}
-              />
-              <Column
-                header="Tác vụ"
-                body={this.actionBodyTemplate}
-                headerStyle={{ width: "8em", textAlign: "center" }}
-                bodyStyle={{ textAlign: "center", overflow: "visible" }}
-              />
-            </DataTable>
-
+            <div className="user_data_table_box ">
+              <DataTable
+                ref={(el) => (this.dt = el)}
+                value={listAllUser}
+                header={header}
+                className="p-datatable-users"
+                dataKey="id"
+                rowHover
+                // selection={this.state.userSelected}
+                // onSelectionChange={e => this.setState({userSelected: e.value})}
+                globalFilter={this.state.globalFilter}
+                paginator
+                rows={10}
+                emptyMessage="Không tìm thấy người dùng"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                rowsPerPageOptions={[10, 25, 50]}
+              >
+                <Column
+                  field="taiKhoan"
+                  header="Tài khoản"
+                  body={this.taiKhoanBodyTemplate}
+                  sortable
+                  filter
+                  filterMatchMode="contains"
+                  filterPlaceholder="Tìm theo tài khoản"
+                />
+                <Column
+                  // sortField="country.name"
+                  // filterField="country.name"
+                  field="hoTen"
+                  header="Họ tên"
+                  body={this.hoTenBodyTemplate}
+                  sortable
+                  filter
+                  filterMatchMode="contains"
+                  filterPlaceholder="Tìm theo tên"
+                />
+                <Column
+                  // sortField="representative.name"
+                  // filterField="representative.name"
+                  field="email"
+                  header="Email"
+                  body={this.emailBodyTemplate}
+                  sortable
+                  filter
+                  filterMatchMode="contains"
+                  filterPlaceholder="Tìm theo email"
+                />
+                <Column
+                  field="soDt"
+                  header="Số điện thoại"
+                  body={this.phoneNumberBodyTemplate}
+                  sortable
+                  filter
+                  filterMatchMode="contains"
+                  filterPlaceholder="Tìm theo số điện thoại"
+                />
+                <Column
+                  field="matKhau"
+                  header="Mật Khẩu"
+                  body={this.passwordBodyTemplate}
+                  sortable
+                  filter
+                  filterMatchMode="contains"
+                  filterPlaceholder="Tìm theo mật khẩu"
+                />
+                <Column
+                  field="maLoaiNguoiDung"
+                  header="Loại người dùng"
+                  body={this.loaiNguoiDungBodyTemplate}
+                  sortable
+                  filter
+                  filterElement={loaiNguoiDungFilter}
+                />
+                <Column
+                  header="Tác vụ"
+                  body={this.actionBodyTemplate}
+                  headerStyle={{ width: "8em", textAlign: "center" }}
+                  bodyStyle={{ textAlign: "center", overflow: "visible" }}
+                />
+              </DataTable>
+            </div>
+            
+            {/* Add user dialog */}
             <Dialog
               visible={this.state.addNewDialog}
               style={{ width: "500px" }}
@@ -529,9 +593,10 @@ class UserManagement extends Component {
               modal
               className="p-fluid add_new_user"
               footer={addUserDialogFooter}
-              onHide={this.hideAddUserDialog}
+              onHide={this.closeAddUserDialog}
             >
               <div className="user_dialog_input p-fluid">
+                <ProgressBar mode="indeterminate" style={{ height: '6px' }} className={this.state.isHideProgressBar?"hide-progress-bar":""} />
                 <div className="p-field">
                   <span className="p-float-label">
                     <InputText
@@ -539,6 +604,7 @@ class UserManagement extends Component {
                       name="taiKhoan"
                       value={this.state.newUser.taiKhoan}
                       autoComplete="off"
+                      disabled={this.state.isDisableForm}
                       onChange={(e) => {
                         this.handleOnChangeAddNewUser(e);
                       }}
@@ -546,7 +612,7 @@ class UserManagement extends Component {
                     />
                     <label htmlFor="taiKhoan">Tài khoản<span style={{color:"red"}}>*</span></label>
                   </span>
-                  <small className={!this.state.taiKhoanValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập tên tài khoản</small>
+                  <small className={this.state.taiKhoanValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập tên tài khoản</small>
                 </div>
                 <div className="p-field">
                   <span className="p-float-label">
@@ -554,6 +620,7 @@ class UserManagement extends Component {
                       id="hoTen"
                       name="hoTen"
                       autoComplete="off"
+                      disabled={this.state.isDisableForm}
                       value={this.state.newUser.hoTen}
                       onChange={(e) => {
                         this.handleOnChangeAddNewUser(e);
@@ -562,7 +629,7 @@ class UserManagement extends Component {
                     />
                     <label htmlFor="hoTen">Họ tên<span style={{color:"red"}}>*</span></label>
                   </span>
-                  <small className={!this.state.hoTenValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập họ tên</small>
+                  <small className={this.state.hoTenValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập họ tên</small>
                 </div>
                 <div className="p-field">
                   <small
@@ -579,13 +646,14 @@ class UserManagement extends Component {
                     id="matKhau"
                     name="matKhau"
                     autoComplete="off"
+                    disabled={this.state.isDisableForm}
                     value={this.state.newUser.matKhau}
                     onChange={(e) => {
                       this.handleOnChangeAddNewUser(e);
                     }}
                     onBlur={this.inputValidator}
                   />
-                  <small className={!this.state.matKhauValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập mật khẩu</small>
+                  <small className={this.state.matKhauValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>{this.state.matKhauValidatorMessage}</small>
                 </div>
                 <div className="p-field">
                   <span className="p-float-label">
@@ -593,6 +661,7 @@ class UserManagement extends Component {
                       id="email"
                       name="email"
                       autoComplete="off"
+                      disabled={this.state.isDisableForm}
                       value={this.state.newUser.email}
                       onChange={(e) => {
                         this.handleOnChangeAddNewUser(e);
@@ -601,7 +670,7 @@ class UserManagement extends Component {
                     />
                     <label htmlFor="email">Email<span style={{color:"red"}}>*</span></label>
                   </span>
-                  <small className={!this.state.emailValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập email</small>
+                  <small className={this.state.emailValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>{this.state.emailValidatorMessage}</small>
                 </div>
                 <div className="p-field">
                   <span className="p-float-label">
@@ -609,6 +678,7 @@ class UserManagement extends Component {
                       id="soDt"
                       name="soDt"
                       autoComplete="off"
+                      disabled={this.state.isDisableForm}
                       value={this.state.newUser.soDt}
                       onChange={(e) => {
                         this.handleOnChangeAddNewUser(e);
@@ -617,30 +687,45 @@ class UserManagement extends Component {
                     />
                     <label htmlFor="soDt">Số điện thoại<span style={{color:"red"}}>*</span></label>
                   </span>
-                  <small className={!this.state.soDtValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa nhập số điện thoại</small>
+                  <small className={this.state.soDtValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>{this.state.phoneNumberValidatorMessage}</small>
                 </div>
                 <div className="p-field">
                   <div className="p-field-radiobutton">
-                    <RadioButton id="radio_khachHang" value="KhachHang" name="maLoaiNguoiDung" onChange={(e) => this.handleRadioButtonLoaiNguoiDung(e)} checked={this.state.newUser.maLoaiNguoiDung === 'KhachHang'} />
+                    <RadioButton 
+                      id="radio_khachHang" 
+                      value="KhachHang" 
+                      name="maLoaiNguoiDung" 
+                      onChange={(e) => this.handleRadioButtonLoaiNguoiDung(e)} 
+                      disabled={this.state.isDisableForm}
+                      checked={this.state.newUser.maLoaiNguoiDung === 'KhachHang'} 
+                    />
                     <label htmlFor="radio_khachHang">Khách hàng</label>
                   </div>
                   <div className="p-field-radiobutton">
-                    <RadioButton id="radio_quanTri" value="QuanTri" name="maLoaiNguoiDung" onChange={(e) => this.handleRadioButtonLoaiNguoiDung(e)} checked={this.state.newUser.maLoaiNguoiDung === 'QuanTri'} />
+                    <RadioButton 
+                      id="radio_quanTri" 
+                      value="QuanTri" 
+                      name="maLoaiNguoiDung" 
+                      disabled={this.state.isDisableForm}
+                      onChange={(e) => this.handleRadioButtonLoaiNguoiDung(e)} 
+                      checked={this.state.newUser.maLoaiNguoiDung === 'QuanTri'} 
+                    />
                     <label htmlFor="radio_quanTri">Quản trị</label>
                   </div>
-                  <small className={!this.state.maLoaiNguoiDungValidator?"input_validator hide ":"input_validator  "} style={{color:"red"}}>Chưa chọn loại người dùng</small>
+                  <small className={this.state.maLoaiNguoiDungValidator ?"input_validator hide":"input_validator  "} style={{color:"red"}}>Chưa chọn loại người dùng</small>
                 </div>
               </div>
             </Dialog>
-
+            
+            {/* Edit user dialog */}
             <Dialog
               visible={this.state.userDialog}
               style={{ width: "500px" }}
               header="Thông tin tài khoản"
               modal
               className="p-fluid"
-              footer={userDialogFooter}
-              onHide={this.hideDialog}
+              footer={editUserDialogFooter}
+              onHide={this.closeUpdateDialog}
             >
               <div className="user_update_dialog_input p-fluid">
                 <ProgressBar mode="indeterminate" style={{ height: '6px' }} className={this.state.isHideProgressBar?"hide-progress-bar":""} />
@@ -739,6 +824,7 @@ const mapStateToProps=(state)=>{
         updateUserStatus:state.adminReducer.updateUserStatus,
         deleteUserStatus:state.adminReducer.deleteUserStatus,
         deleteUserMessage:state.adminReducer.deleteUserMessage,
+        addUserStatus:state.adminReducer.addUserStatus,
     }
 }
 const mapDispatchToProps=(dispatch)=>{
@@ -754,6 +840,9 @@ const mapDispatchToProps=(dispatch)=>{
         },
         deleteUser:(taiKhoan,token)=>{
           dispatch(action.actDeleteUser(taiKhoan,token))
+        },
+        addUser:(taiKhoan)=>{
+          dispatch(action.actAddUser(taiKhoan))
         }
     }
 }

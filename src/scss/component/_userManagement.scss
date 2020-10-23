@@ -16,20 +16,37 @@
             border-radius: 5px;
             background-color: $redBadgeBg;
             color: $redBadgeText;
+            font-size: 13px;
+            font-weight: 600;
         }
         .custom-badge-KhachHang{
             padding: 3px 5px;
             border-radius: 5px;
             background-color: $greenBadgeBg;
             color: $greenBadgeText;
+            font-size: 13px;
+            font-weight: 600;
+        }
+    }
+    .user_dialog_input{
+        padding-top: 10px;
+        .p-field{
+            padding: 10px 0 !important;
+            margin: 0 ;
         }
     }
     .user_update_dialog_input{
         padding: 10px;
         .p-field{
             padding: 10px 0 !important;
+            
         }
     }
+    
+    // .p-dialog-content{
+    //     height: 35rem !important;
+    // }
+    
 }
 
 @media (max-width: 960px) {

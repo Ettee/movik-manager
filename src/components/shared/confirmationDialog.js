@@ -13,7 +13,7 @@ import {withRouter} from "react-router-dom";
         }
     }
     onHide() {
-        this.props.closeDialog()
+      this.props.closeDialog()
     }
     renderFooter(nameL, nameR) {
       let {leftAction,rightAction}=this.props

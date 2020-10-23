@@ -9,6 +9,9 @@
 .hidden{
     display: none;
 }
+.hide{
+    opacity: 0;
+}
 .action-button{
     background-color: transparent;
     border: none !important;
@@ -23,4 +26,7 @@
 .action-button.delete{
     background-color: $red;
     color: white;
+}
+.p-progressbar.p-component.p-progressbar-indeterminate.hide-progress-bar{
+    display: none;
 }

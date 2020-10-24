@@ -134,11 +134,29 @@ export const actAddUser=(obj)=>{
             })
         })
         .catch(err=>{
-            console.log(err.response.data)
+            console.log(err.response)
             dispatch({
                 type:ActionType.ADD_USER_STATUS,
                 data:"addUSer_fail"
             })
+        })
+    }
+}
+export const actViewUserBookingHistory=(taiKhoan)=>{
+    return dispatch=>{
+        Axios({
+            method:"POST",
+            url:"https://movie0706.cybersoft.edu.vn/api/QuanLyNguoiDung/ThongTinTaiKhoan",
+            data:taiKhoan
+        })
+        .then((rs)=>{
+            dispatch({
+                type:ActionType.USER_BOOKING_HISTORY,
+                data:rs.data
+            })
+        })
+        .catch((err)=>{
+            console.log(err)
         })
     }
 }

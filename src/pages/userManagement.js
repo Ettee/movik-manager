@@ -61,7 +61,9 @@ class UserManagement extends Component {
           emailValidatorMessage:'',
           phoneNumberValidatorMessage:'',
           matKhauValidatorMessage:'',
-          isRefreshing:false
+          isRefreshing:false,
+          taiKhoanSelectedForDetailView:null,
+          detailUserBookingDialog:false
         }
     }
     
@@ -193,6 +195,29 @@ class UserManagement extends Component {
         </div>  
       );
     }
+    renderUserBookingDataTable=()=>{
+      if( Object.keys(this.props.userBookingData).length > 0 ){
+        console.log(this.props.userBookingData)
+        // return(
+        //   <DataTable 
+        //     value={this.state.customers} 
+        //     paginator
+        //     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+        //     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" 
+        //     rows={10} 
+        //     rowsPerPageOptions={[10,20,50]}
+        //     paginatorLeft={paginatorLeft} 
+        //     paginatorRight={paginatorRight}
+        //   >
+        //     <Column field="name" header="Name"></Column>
+        //     <Column field="country.name" header="Country"></Column>
+        //     <Column field="company" header="Company"></Column>
+        //     <Column field="representative.name" header="Representative"></Column>
+        //   </DataTable>
+        // )
+      }
+    }
+
 
     //tác vụ chính
     updateUser=()=>{
@@ -226,6 +251,9 @@ class UserManagement extends Component {
     }
     handleAddUserClick=(event)=>{
       this.inputValidator()
+      this.setState({
+        isDisableForm:true
+      })
       setTimeout(()=>{
         let {taiKhoanValidator,matKhauValidator,emailValidator,hoTenValidator,soDtValidator,maLoaiNguoiDungValidator}=this.state
         let validator=taiKhoanValidator && matKhauValidator && emailValidator && hoTenValidator && soDtValidator && maLoaiNguoiDungValidator
@@ -238,7 +266,6 @@ class UserManagement extends Component {
     }
     addUser=()=>{      
       this.setState({
-        isDisableForm:true,
         isHideProgressBar:false
       })
       // console.log(this.state.newUser)
@@ -255,7 +282,7 @@ class UserManagement extends Component {
       });
     }
     sendOTPCode=(event)=>{
-      event.preventDefault();
+      event.persist();
       this.phoneAuthen()
       var phoneNumber = this.getUserPhoneNumber();
       var appVerifier = window.recaptchaVerifier;
@@ -274,12 +301,20 @@ class UserManagement extends Component {
             })
             .catch((error)=> {
               // User couldn't sign in (bad verification code?)
+              console.log(error)
               this.toast.show({severity: 'error', summary: 'Sai mã otp. Vui lòng lấy lại mã.'});
+              this.setState({
+                isDisableForm:false
+              })
             });
         })
         .catch((error)=>{
           // Error; SMS not sent
+          console.log(error)
           this.toast.show({severity: 'error', summary: 'Không gửi được mã otp. Vui lòng lấy lại mã'});
+          this.setState({
+            isDisableForm:false
+          })
         });
     }
     getUserPhoneNumber=()=>{
@@ -299,6 +334,7 @@ class UserManagement extends Component {
         })
       },2000)
     }
+
     //handle event click, change
     handleOnChangeUpdateInput=(e)=>{
       let{name,value}=e.target
@@ -339,6 +375,15 @@ class UserManagement extends Component {
       })
       
     }
+    handleOnRowClick=(e)=>{
+      console.log(e.value.taiKhoan)
+      // this.setState({taiKhoanSelectedForDetailView: e.value.taiKhoan})
+      let obj={
+        taiKhoan:e.value.taiKhoan
+      }
+      this.props.viewUserBooking(obj)
+      this.openDetailUserBookingDialog()
+    }
 
     //close dialog
     closeAddUserDialog=()=>{
@@ -374,6 +419,11 @@ class UserManagement extends Component {
         isDeleteDialogOpen:false
       })
     }
+    closeDetailUserBookingDialog=()=>{
+      this.setState({
+        detailUserBookingDialog:false
+      })
+    }
 
     //open dialog
     openAddUserDialog=()=>{
@@ -390,6 +440,11 @@ class UserManagement extends Component {
     openEditUserDialog=()=>{
       this.setState({
         userDialog:true
+      })
+    }
+    openDetailUserBookingDialog=()=>{
+      this.setState({
+        detailUserBookingDialog:true
       })
     }
 
@@ -551,6 +606,16 @@ class UserManagement extends Component {
             />
           </Fragment>
         );
+        const detailUserBookingFooter=(
+          <Fragment>
+            <Button
+              label="Cancel"
+              icon="pi pi-times"
+              className="p-button-text"
+              onClick={this.closeDetailUserBookingDialog}
+            />
+          </Fragment>
+        )
       // console.log(this.props.deleteUserMessage)
         return (
           <div className="user_manager_page">
@@ -580,8 +645,8 @@ class UserManagement extends Component {
                 className="p-datatable-users"
                 dataKey="id"
                 rowHover
-                // selection={this.state.userSelected}
-                // onSelectionChange={e => this.setState({userSelected: e.value})}
+                onSelectionChange={e => {this.handleOnRowClick(e)}}
+                selectionMode="single"
                 globalFilter={this.state.globalFilter}
                 paginator
                 rows={10}
@@ -788,6 +853,20 @@ class UserManagement extends Component {
                 </div>
               </div>
             </Dialog>
+
+            {/* Detail user history book dialog */}
+            <Dialog
+              visible={this.state.detailUserBookingDialog}
+              style={{ width: "60vw" }}
+              header="Thêm tài khoản"
+              modal
+              className="p-fluid add_new_user"
+              footer={detailUserBookingFooter}
+              onHide={this.closeDetailUserBookingDialog}
+            >
+              {this.renderUserBookingDataTable()}
+              
+            </Dialog>
             
             {/* Edit user dialog */}
             <Dialog
@@ -897,6 +976,7 @@ const mapStateToProps=(state)=>{
         deleteUserStatus:state.adminReducer.deleteUserStatus,
         deleteUserMessage:state.adminReducer.deleteUserMessage,
         addUserStatus:state.adminReducer.addUserStatus,
+        userBookingData:state.adminReducer.userBookingHistory
     }
 }
 const mapDispatchToProps=(dispatch)=>{
@@ -915,6 +995,9 @@ const mapDispatchToProps=(dispatch)=>{
         },
         addUser:(taiKhoan)=>{
           dispatch(action.actAddUser(taiKhoan))
+        },
+        viewUserBooking:(taiKhoan)=>{
+          dispatch(action.actViewUserBookingHistory(taiKhoan))
         }
     }
 }

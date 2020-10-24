@@ -7,7 +7,8 @@ let initialState={
     updateUserStatus:'',
     deleteUserStatus:'',
     deleteUserMessage:'',
-    addUserStatus:''
+    addUserStatus:'',
+    userBookingHistory:{}
 }
 const adminReducer=(state=initialState,action)=>{
     switch(action.type){
@@ -34,6 +35,9 @@ const adminReducer=(state=initialState,action)=>{
             return {...state}
         case ActionType.ADD_USER_STATUS:
             state.addUserStatus=action.data;
+            return {...state}
+        case ActionType.USER_BOOKING_HISTORY:
+            state.userBookingHistory=action.data;
             return {...state}
         default:
             return {...state}

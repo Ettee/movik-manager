@@ -1,6 +1,19 @@
 @import "../helper/variables.scss";
 @import "../helper/mixin.scss";
 .user_manager_page{
+    position: relative;
+    .refresh_overlay{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba($color: #A9A9A9, $alpha: .3);
+        z-index: 1;
+    }
+    .refresh_overlay.hide-overlay{
+        display: none;
+    }
     .p-datatable-users{
         .p-datatable-header{
             .table-header{

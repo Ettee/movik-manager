@@ -17,6 +17,7 @@ import { RadioButton } from 'primereact/radiobutton';
 import 'primeflex/primeflex.css';
 import ConfirmationDialog from "../components/shared/confirmationDialog"
 import { ProgressBar } from "primereact/progressbar";
+import firebase from "../fire"
 //NOTED: GIAO DIỆN CHỈ HỖ TRỢ THẤP NHẤT LÀ 800PX
 class UserManagement extends Component {
     constructor(props){
@@ -59,7 +60,8 @@ class UserManagement extends Component {
           isHideProgressBar:true,
           emailValidatorMessage:'',
           phoneNumberValidatorMessage:'',
-          matKhauValidatorMessage:''
+          matKhauValidatorMessage:'',
+          isRefreshing:false
         }
     }
     
@@ -135,6 +137,12 @@ class UserManagement extends Component {
             icon="pi pi-plus"
             className="p-button-success p-mr-2"
             onClick={this.openAddUserDialog}
+          />
+          <Button
+            label="Refresh"
+            icon="pi pi-refresh"
+            className="p-button-primary p-mr-2"
+            onClick={this.handleRefresh}
           />
         </Fragment>
       );
@@ -216,26 +224,81 @@ class UserManagement extends Component {
         this.waitForDeleteStatus()
       } 
     }
-    addUser=()=>{
+    handleAddUserClick=(event)=>{
       this.inputValidator()
       setTimeout(()=>{
         let {taiKhoanValidator,matKhauValidator,emailValidator,hoTenValidator,soDtValidator,maLoaiNguoiDungValidator}=this.state
         let validator=taiKhoanValidator && matKhauValidator && emailValidator && hoTenValidator && soDtValidator && maLoaiNguoiDungValidator
         if(validator){
-          this.setState({
-            isDisableForm:true,
-            isHideProgressBar:false
-          })
-          // console.log(this.state.newUser)
-          this.waitForAddUserStatus()
-          this.props.addUser(this.state.newUser)
+          this.sendOTPCode(event)
         }else{
           this.toast.show({severity: 'error', summary: 'Bạn hãy hoàn thành form đăng kí'});
         }
       },500)
-      
     }
-
+    addUser=()=>{      
+      this.setState({
+        isDisableForm:true,
+        isHideProgressBar:false
+      })
+      // console.log(this.state.newUser)
+      this.waitForAddUserStatus()
+      this.props.addUser(this.state.newUser)
+    }
+    phoneAuthen=()=>{
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recapcha-container', {
+        'size': 'invisible',
+        'callback': (response)=> {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+          this.sendOTPCode();
+        }
+      });
+    }
+    sendOTPCode=(event)=>{
+      event.preventDefault();
+      this.phoneAuthen()
+      var phoneNumber = this.getUserPhoneNumber();
+      var appVerifier = window.recaptchaVerifier;
+      firebase
+        .auth()
+        .signInWithPhoneNumber(phoneNumber, appVerifier)
+        .then((confirmationResult) =>{
+          // SMS sent. Prompt user to type the code from the message, then sign the
+          // user in with confirmationResult.confirm(code).
+          window.confirmationResult = confirmationResult;
+          var code = window.prompt("Nhập OTP") ;
+          confirmationResult
+            .confirm(code)
+            .then(()=>{
+              this.addUser()
+            })
+            .catch((error)=> {
+              // User couldn't sign in (bad verification code?)
+              this.toast.show({severity: 'error', summary: 'Sai mã otp. Vui lòng lấy lại mã.'});
+            });
+        })
+        .catch((error)=>{
+          // Error; SMS not sent
+          this.toast.show({severity: 'error', summary: 'Không gửi được mã otp. Vui lòng lấy lại mã'});
+        });
+    }
+    getUserPhoneNumber=()=>{
+      let number = this.state.newUser.soDt;
+      if(number.length<=0){
+        return '+84964366725'
+      }
+      return "+84"+number.substring(1)
+    }
+    handleRefresh=()=>{
+      this.setState({
+        isRefreshing:true
+      })
+      setTimeout(()=>{
+        this.setState({
+          isRefreshing:false
+        })
+      },2000)
+    }
     //handle event click, change
     handleOnChangeUpdateInput=(e)=>{
       let{name,value}=e.target
@@ -244,6 +307,7 @@ class UserManagement extends Component {
       })
     }
     handleOnEditClick=(rowData)=>{
+      this.openEditUserDialog()
       this.setState({
         userSelected:{
           taiKhoan:rowData.taiKhoan,
@@ -252,8 +316,7 @@ class UserManagement extends Component {
           email:rowData.email,
           maLoaiNguoiDung:rowData.maLoaiNguoiDung,
           soDt:rowData.soDt
-        },
-        userDialog:true
+        }
       })
     }
     onLoaiNguoiDungFilterChange=(event)=>{
@@ -322,6 +385,11 @@ class UserManagement extends Component {
       this.setState({
         isDeleteDialogOpen:true,
         rowData:rowData
+      })
+    }
+    openEditUserDialog=()=>{
+      this.setState({
+        userDialog:true
       })
     }
 
@@ -478,16 +546,19 @@ class UserManagement extends Component {
               label="Save"
               icon="pi pi-check"
               className="p-button-text"
-              onClick={this.addUser}
+              // onClick={this.addUser}
+              onClick={(e)=>{this.handleAddUserClick(e)}}
             />
           </Fragment>
         );
       // console.log(this.props.deleteUserMessage)
         return (
           <div className="user_manager_page">
+            <div className={this.state.isRefreshing?"refresh_overlay":"refresh_overlay hide-overlay"}></div>
+            <ProgressBar mode="indeterminate" style={{ height: '6px' }} className={this.state.isRefreshing?"":"hide-progress-bar"} />
             <ConfirmationDialog
               header="Xác nhận xóa tài khoản"
-              content="Bạn có chắn chắn xóa tài khoản này không ?"
+              content="Bạn có chắn chắn muốn xóa tài khoản này không ?"
               isOpen={this.state.isDeleteDialogOpen}
               btLeft="Hủy"
               btRight="Xác nhận"
@@ -597,6 +668,7 @@ class UserManagement extends Component {
             >
               <div className="user_dialog_input p-fluid">
                 <ProgressBar mode="indeterminate" style={{ height: '6px' }} className={this.state.isHideProgressBar?"hide-progress-bar":""} />
+                <div id="recapcha-container"></div>
                 <div className="p-field">
                   <span className="p-float-label">
                     <InputText

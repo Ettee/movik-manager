@@ -1,5 +1,7 @@
 import React, { Component,Fragment } from 'react'
 import * as LocalStoreServs from "../services/accessToLocalStore";
+import EditDialog from "../components/userManagement/editDialog";
+import UserBookingDialog from "../components/userManagement/userBookingDialog";
 import {withRouter} from "react-router-dom";
 import { connect } from "react-redux";
 import * as action from "../redux/actions";
@@ -180,6 +182,12 @@ class UserManagement extends Component {
     actionBodyTemplate=(rowData)=>{
       return (
         <div>
+          <Button
+              type="button"
+              icon="pi pi-th-large"
+              className="action-button detail"
+              onClick={() => {this.handleOnRowClick(rowData)}}
+            ></Button>
             <Button
               type="button"
               icon="pi pi-user-edit"
@@ -196,26 +204,11 @@ class UserManagement extends Component {
       );
     }
     renderUserBookingDataTable=()=>{
-      if( Object.keys(this.props.userBookingData).length > 0 ){
-        console.log(this.props.userBookingData)
-        // return(
-        //   <DataTable 
-        //     value={this.state.customers} 
-        //     paginator
-        //     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-        //     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" 
-        //     rows={10} 
-        //     rowsPerPageOptions={[10,20,50]}
-        //     paginatorLeft={paginatorLeft} 
-        //     paginatorRight={paginatorRight}
-        //   >
-        //     <Column field="name" header="Name"></Column>
-        //     <Column field="country.name" header="Country"></Column>
-        //     <Column field="company" header="Company"></Column>
-        //     <Column field="representative.name" header="Representative"></Column>
-        //   </DataTable>
-        // )
-      }
+        return(
+          <UserBookingDialog
+            thongTinDatVe={this.props.userBookingData}
+          />
+        )
     }
 
 
@@ -375,11 +368,10 @@ class UserManagement extends Component {
       })
       
     }
-    handleOnRowClick=(e)=>{
-      console.log(e.value.taiKhoan)
-      // this.setState({taiKhoanSelectedForDetailView: e.value.taiKhoan})
+    handleOnRowClick=(rowData)=>{
+      this.setState({taiKhoanSelectedForDetailView: rowData.taiKhoan})
       let obj={
-        taiKhoan:e.value.taiKhoan
+        taiKhoan:rowData.taiKhoan
       }
       this.props.viewUserBooking(obj)
       this.openDetailUserBookingDialog()
@@ -601,7 +593,6 @@ class UserManagement extends Component {
               label="Save"
               icon="pi pi-check"
               className="p-button-text"
-              // onClick={this.addUser}
               onClick={(e)=>{this.handleAddUserClick(e)}}
             />
           </Fragment>
@@ -619,7 +610,6 @@ class UserManagement extends Component {
       // console.log(this.props.deleteUserMessage)
         return (
           <div className="user_manager_page">
-            <div className={this.state.isRefreshing?"refresh_overlay":"refresh_overlay hide-overlay"}></div>
             <ProgressBar mode="indeterminate" style={{ height: '6px' }} className={this.state.isRefreshing?"":"hide-progress-bar"} />
             <ConfirmationDialog
               header="Xác nhận xóa tài khoản"
@@ -637,7 +627,7 @@ class UserManagement extends Component {
                 right={this.rightToolbarTemplate}
               ></Toolbar>
             </div>
-            <div className="user_data_table_box ">
+            <div className={this.state.isRefreshing?"user_data_table_box refresh_overlay":"user_data_table_box"}>
               <DataTable
                 ref={(el) => (this.dt = el)}
                 value={listAllUser}
@@ -645,13 +635,13 @@ class UserManagement extends Component {
                 className="p-datatable-users"
                 dataKey="id"
                 rowHover
-                onSelectionChange={e => {this.handleOnRowClick(e)}}
-                selectionMode="single"
+                // onSelectionChange={e => {this.handleOnRowClick(e)}}
+                // selectionMode="single"
                 globalFilter={this.state.globalFilter}
                 paginator
                 rows={10}
                 emptyMessage="Không tìm thấy người dùng"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                currentPageReportTemplate="Hiển thị từ {first} đến {last} trong tổng {totalRecords} tài khoản"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 rowsPerPageOptions={[10, 25, 50]}
               >
@@ -663,6 +653,7 @@ class UserManagement extends Component {
                   filter
                   filterMatchMode="contains"
                   filterPlaceholder="Tìm theo tài khoản"
+                  
                 />
                 <Column
                   // sortField="country.name"
@@ -869,102 +860,21 @@ class UserManagement extends Component {
             </Dialog>
             
             {/* Edit user dialog */}
-            <Dialog
+            <EditDialog
               visible={this.state.userDialog}
-              style={{ width: "500px" }}
-              header="Thông tin tài khoản"
-              modal
-              className="p-fluid"
               footer={editUserDialogFooter}
               onHide={this.closeUpdateDialog}
-            >
-              <div className="user_update_dialog_input p-fluid">
-                <ProgressBar mode="indeterminate" style={{ height: '6px' }} className={this.state.isHideProgressBar?"hide-progress-bar":""} />
-                <div className="p-field">
-                  <span className="p-float-label">
-                    <InputText
-                      id="taiKhoan"
-                      name="taiKhoan"
-                      value={this.state.userSelected.taiKhoan}
-                      disabled
-                    />
-                    <label htmlFor="taiKhoan">Tài khoản</label>
-                  </span>
-                </div>
-                <div className="p-field">
-                  <span className="p-float-label">
-                    <InputText
-                      id="hoTen"
-                      name="hoTen"
-                      autoComplete="off"
-                      disabled={this.state.isDisableForm}
-                      value={this.state.userSelected.hoTen}
-                      onChange={(e) => {
-                        this.handleOnChangeUpdateInput(e);
-                      }}
-                    />
-                    <label htmlFor="hoTen">Họ tên</label>
-                  </span>
-                </div>
-                <div className="p-field">
-                  <span className="p-float-label">
-                    <InputText
-                      id="matKhau"
-                      name="matKhau"
-                      autoComplete="off"
-                      disabled={this.state.isDisableForm}
-                      value={this.state.userSelected.matKhau}
-                      onChange={(e) => {
-                        this.handleOnChangeUpdateInput(e);
-                      }}
-                    />
-                    <label htmlFor="matKhau">Mật khẩu</label>
-                  </span>
-                </div>
-                <div className="p-field">
-                  <span className="p-float-label">
-                    <InputText
-                      id="email"
-                      name="email"
-                      autoComplete="off"
-                      disabled={this.state.isDisableForm}
-                      value={this.state.userSelected.email}
-                      onChange={(e) => {
-                        this.handleOnChangeUpdateInput(e);
-                      }}
-                    />
-                    <label htmlFor="email">Email</label>
-                  </span>
-                </div>
-                <div className="p-field">
-                  <span className="p-float-label">
-                    <InputText
-                      id="soDt"
-                      name="soDt"
-                      autoComplete="off"
-                      disabled={this.state.isDisableForm}
-                      value={this.state.userSelected.soDt}
-                      onChange={(e) => {
-                        this.handleOnChangeUpdateInput(e);
-                      }}
-                    />
-                    <label htmlFor="soDt">Số điện thoại</label>
-                  </span>
-                </div>
-                <div className="p-field">
-                  <span className="p-float-label">
-                    <InputText
-                      id="maLoaiNguoiDung"
-                      name="maLoaiNguoiDung"
-                      autoComplete="off"
-                      value={this.state.userSelected.maLoaiNguoiDung}
-                      disabled
-                    />
-                    <label htmlFor="maLoaiNguoiDung">Loại người dùng</label>
-                  </span>
-                </div>
-              </div>
-            </Dialog>
+              isHideProgressBar={this.state.isHideProgressBar}
+              isDisableForm={this.state.isDisableForm}
+              taiKhoanValue={this.state.userSelected.taiKhoan}
+              hoTenValue={this.state.userSelected.hoTen}
+              matKhauValue={this.state.userSelected.matKhau}
+              emailValue={this.state.userSelected.email}
+              soDtValue={this.state.userSelected.soDt}
+              maLoaiNguoiDungValue={this.state.userSelected.maLoaiNguoiDung}
+              handleOnChangeUpdateInput={this.handleOnChangeUpdateInput}
+            />
+            
           </div>
         );
     }

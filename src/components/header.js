@@ -33,7 +33,10 @@ class Header extends Component {
     }
     getAdminName=()=>{
       let data = localStoreServs.getAdminLoginData()
-      return data.taiKhoan
+      if(data!==null){
+        return data.taiKhoan
+      }
+      
     }
 
     render() {

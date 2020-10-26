@@ -4,7 +4,7 @@ export const saveDataToLocalStore=(name,value)=>{
 }
 export const getDataFromLocalStore=(name)=>{
     let data= JSON.parse(localStorage.getItem(name))
-    if(data){
+    if(Object.keys(data).length>0){
         return data
     }
     return null
@@ -13,9 +13,8 @@ export const removeItemFromLocalStore=(name)=>{
     localStorage.removeItem(name)
 }
 export const getAdminLoginData=()=>{
-    
     let data =JSON.parse(localStorage.getItem("adminData"))
-    if(data){
+    if(Object.keys(data).length>0){
         return data
     }
     return null;
